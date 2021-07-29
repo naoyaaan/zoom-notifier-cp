@@ -1,0 +1,817 @@
+openapi: 3.0.3
+info:
+  title: Zoom Notifier API
+  description: This is a API scheme for the zoom notifier.
+  contact:
+    email: matsuura.m.ag@m.titech.ac.jp
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+- url: http://localhost:8080/api/v1
+security:
+- Bearer: []
+tags:
+- name: accounts
+  description: アカウント管理関係
+- name: classes
+  description: 履修科目関係
+- name: tasks
+  description: タスク管理関係
+paths:
+  /credential:
+    post:
+      tags:
+      - accounts
+      summary: 既存のアカウントにサインインする
+      operationId: signin
+      requestBody:
+        description: ユーザ名とパスワードを渡すことでサインインする
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credential'
+            examples:
+              sample1:
+                value:
+                  username: Admin
+                  password: passw0rd
+              sample2:
+                value:
+                  username: User
+                  password: "01234567"
+        required: true
+      responses:
+        "200":
+          description: Successful sign in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+        "400":
+          description: ログインに失敗した場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                wrong:
+                  summary: ログイン失敗
+                  value:
+                    code: 400
+                    message: Wrong username or password
+        default:
+          description: 一般的なエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                "400":
+                  $ref: '#/components/examples/400'
+                "401":
+                  $ref: '#/components/examples/401'
+                "403":
+                  $ref: '#/components/examples/403'
+                "404":
+                  $ref: '#/components/examples/404'
+                "500":
+                  $ref: '#/components/examples/500'
+      security: []
+      x-swagger-router-controller: Accounts
+  /users:
+    post:
+      tags:
+      - accounts
+      summary: 新規アカウントを作成する
+      operationId: signup
+      requestBody:
+        description: ユーザ名とパスワードを渡すことで新規登録する
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credential'
+            examples:
+              sample1:
+                value:
+                  username: Admin
+                  password: passw0rd
+              sample2:
+                value:
+                  username: User
+                  password: "01234567"
+        required: true
+      responses:
+        "200":
+          description: 成功した場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+              example:
+                code: 200
+                message: OK
+        "400":
+          description: ユーザー名が既に利用されていたり，パスワードが指定された要件を満たさない場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 400
+                message: Username already taken
+        default:
+          description: 一般的なエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                "400":
+                  $ref: '#/components/examples/400'
+                "401":
+                  $ref: '#/components/examples/401'
+                "403":
+                  $ref: '#/components/examples/403'
+                "404":
+                  $ref: '#/components/examples/404'
+                "500":
+                  $ref: '#/components/examples/500'
+      security: []
+      x-swagger-router-controller: Accounts
+  /users/me:
+    get:
+      tags:
+      - accounts
+      summary: アカウント情報を取得する
+      operationId: get_account_info
+      responses:
+        "200":
+          description: 認証されている場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              examples:
+                sample:
+                  value:
+                    id: 123
+                    username: admin
+                    rss_url: http://ocw.example.com/rss/hogehogehogehoge
+                    ical_url: http://ocw.example.com/ical/hogehogehogehoge
+        "401":
+          description: ログインできていない場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                sample:
+                  $ref: '#/components/examples/401'
+      x-swagger-router-controller: Accounts
+    put:
+      tags:
+      - accounts
+      summary: アカウント情報を更新する
+      operationId: update_account_info
+      requestBody:
+        description: パスワードとOCW-iのRSS/iCalのURLを渡しアカウント情報を更新する
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settings'
+            examples:
+              sample:
+                value:
+                  password: p455w0rd
+                  rss_url: https://secure.ocw.titech.ac.jp/ocwi/index.php?module=Ocwi&action=Rss&type=1&id=pLkIqXXXXXXXX
+                  ical_url: https://secure.ocw.titech.ac.jp/ocwi/index.php?module=Ocwi&action=Webcal&iCalendarId=0007ea8f335548ecb8ffe55991119d02XXXXXXXX
+        required: true
+      responses:
+        "200":
+          description: 成功した場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+              example:
+                code: 200
+                message: OK
+        "400":
+          description: URLやパスワードが指定された要件を満たさない場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: 400
+                message: Password too short
+        default:
+          description: 一般的なエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                "400":
+                  $ref: '#/components/examples/400'
+                "401":
+                  $ref: '#/components/examples/401'
+                "403":
+                  $ref: '#/components/examples/403'
+                "404":
+                  $ref: '#/components/examples/404'
+                "500":
+                  $ref: '#/components/examples/500'
+      x-swagger-router-controller: Accounts
+  /classes:
+    get:
+      tags:
+      - classes
+      summary: クラス一覧を取得する
+      operationId: get_classes
+      parameters:
+      - name: since
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date
+      - name: until
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date
+      responses:
+        "200":
+          description: 成功した場合
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClassSummary'
+                x-content-type: application/json
+              examples:
+                sample1:
+                  value:
+                  - name: システム設計演習
+                    next_class:
+                      location: Zoom
+                      starts_at: 2020-12-30T20:02:05.123456+0900
+                      ends_at: 2020-12-30T22:02:05.123456+0900
+                  - name: システム構築演習
+                    next_class:
+                      location: Zoom
+                      starts_at: 2020-12-31T20:02:05.123456+0900
+                      ends_at: 2020-12-31T22:02:05.123456+0900
+                  - name: お正月学第一
+                    next_class:
+                      location: Zoom
+                      starts_at: 2021-12-01T09:02:05.123456+0900
+                      ends_at: 2021-01-01T10:02:05.123456+0900
+        default:
+          description: 一般的なエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                "400":
+                  $ref: '#/components/examples/400'
+                "401":
+                  $ref: '#/components/examples/401'
+                "403":
+                  $ref: '#/components/examples/403'
+                "404":
+                  $ref: '#/components/examples/404'
+                "500":
+                  $ref: '#/components/examples/500'
+      x-swagger-router-controller: Classes
+  /classes/{class_id}:
+    get:
+      tags:
+      - classes
+      summary: クラス詳細を取得する
+      operationId: get_class
+      parameters:
+      - name: class_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          minimum: 0
+          type: integer
+      responses:
+        "200":
+          description: 成功した場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+        default:
+          description: 一般的なエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                "400":
+                  $ref: '#/components/examples/400'
+                "401":
+                  $ref: '#/components/examples/401'
+                "403":
+                  $ref: '#/components/examples/403'
+                "404":
+                  $ref: '#/components/examples/404'
+                "500":
+                  $ref: '#/components/examples/500'
+      x-swagger-router-controller: Classes
+  /tasks:
+    get:
+      tags:
+      - tasks
+      summary: タスク一覧を取得する
+      operationId: get_tasks
+      parameters:
+      - name: status
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - ongoing
+          - completed
+      responses:
+        "200":
+          description: 成功した場合
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                  - type: object
+                    properties:
+                      class:
+                        type: string
+                  - $ref: '#/components/schemas/ClassTask'
+                x-content-type: application/json
+        default:
+          description: 一般的なエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                "400":
+                  $ref: '#/components/examples/400'
+                "401":
+                  $ref: '#/components/examples/401'
+                "403":
+                  $ref: '#/components/examples/403'
+                "404":
+                  $ref: '#/components/examples/404'
+                "500":
+                  $ref: '#/components/examples/500'
+      x-swagger-router-controller: Tasks
+  /classes/{class_id}/tasks:
+    post:
+      tags:
+      - tasks
+      summary: 新規タスクを作成する
+      operationId: create_task
+      parameters:
+      - name: class_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          minimum: 0
+          type: integer
+      requestBody:
+        description: 新規タスクを作成する
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+            examples:
+              sample1:
+                value:
+                  title: Make an UI image for sysimpl
+                  description: Just do it
+                  created_at: 2020-12-31T20:02:05.123456+0900
+                  deadline: 2021-01-03T17:02:05.123456+0900
+                  completed: false
+        required: true
+      responses:
+        "200":
+          description: 成功した場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+              example:
+                code: 200
+                message: OK
+        default:
+          description: 一般的なエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                "400":
+                  $ref: '#/components/examples/400'
+                "401":
+                  $ref: '#/components/examples/401'
+                "403":
+                  $ref: '#/components/examples/403'
+                "404":
+                  $ref: '#/components/examples/404'
+                "500":
+                  $ref: '#/components/examples/500'
+      x-swagger-router-controller: Tasks
+  /classes/{class_id}/tasks/{task_id}:
+    put:
+      tags:
+      - tasks
+      summary: 既存タスクを編集する
+      operationId: put_task
+      parameters:
+      - name: class_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          minimum: 0
+          type: integer
+      - name: task_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          minimum: 0
+          type: integer
+      requestBody:
+        description: 既存タスクを編集する
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+            examples:
+              sample1:
+                value:
+                  title: Make an UI image for sysimpl
+                  description: Just do it
+                  deadline: 2021-01-03T17:02:05.123456+0900
+                  completed: true
+        required: true
+      responses:
+        "200":
+          description: 成功した場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+              example:
+                code: 200
+                message: OK
+        default:
+          description: 一般的なエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                "400":
+                  $ref: '#/components/examples/400'
+                "401":
+                  $ref: '#/components/examples/401'
+                "403":
+                  $ref: '#/components/examples/403'
+                "404":
+                  $ref: '#/components/examples/404'
+                "500":
+                  $ref: '#/components/examples/500'
+      x-swagger-router-controller: Tasks
+components:
+  schemas:
+    Notification:
+      required:
+      - created_at
+      - id
+      - message
+      - queried_at
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        queried_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        message:
+          type: string
+    MeetingURL:
+      required:
+      - created_at
+      - id
+      - queried_at
+      - url
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        queried_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        url:
+          type: string
+        passcode:
+          type: string
+        topic:
+          type: string
+        starts_at:
+          type: string
+    RecordingURL:
+      required:
+      - created_at
+      - id
+      - queried_at
+      - url
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        queried_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        url:
+          type: string
+        passcode:
+          type: string
+    Task:
+      required:
+      - completed
+      - created_at
+      - deadline
+      - description
+      - title
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          minLength: 1
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        deadline:
+          type: string
+          format: date-time
+        completed:
+          type: boolean
+    Schedule:
+      required:
+      - ends_at
+      - location
+      - starts_at
+      type: object
+      properties:
+        location:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+      example:
+        starts_at: 2000-01-23T04:56:07.000+00:00
+        location: location
+        ends_at: 2000-01-23T04:56:07.000+00:00
+    ClassSummary:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+        next_class:
+          $ref: '#/components/schemas/Schedule'
+      example:
+        name: name
+        next_class:
+          starts_at: 2000-01-23T04:56:07.000+00:00
+          location: location
+          ends_at: 2000-01-23T04:56:07.000+00:00
+    Class:
+      allOf:
+      - $ref: '#/components/schemas/ClassSummary'
+      - required:
+        - meetings
+        - notifications
+        - recordings
+        - schedules
+        - tasks
+        type: object
+        properties:
+          meetings:
+            type: array
+            items:
+              $ref: '#/components/schemas/MeetingURL'
+          recordings:
+            type: array
+            items:
+              $ref: '#/components/schemas/RecordingURL'
+          notifications:
+            type: array
+            items:
+              $ref: '#/components/schemas/Notification'
+          tasks:
+            type: array
+            items:
+              $ref: '#/components/schemas/Task'
+          schedules:
+            type: array
+            items:
+              $ref: '#/components/schemas/Schedule'
+    ClassTask:
+      allOf:
+      - type: object
+        properties:
+          class:
+            type: string
+      - $ref: '#/components/schemas/Task'
+    Credential:
+      type: object
+      properties:
+        username:
+          maxLength: 64
+          minLength: 4
+          type: string
+        password:
+          maxLength: 64
+          minLength: 4
+          type: string
+          format: password
+    Settings:
+      type: object
+      properties:
+        password:
+          maxLength: 64
+          minLength: 4
+          type: string
+          format: password
+        rss_url:
+          maxLength: 128
+          type: string
+        ical_url:
+          maxLength: 128
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          minimum: 0
+          type: integer
+          format: int64
+        username:
+          maxLength: 64
+          minLength: 4
+          type: string
+        rss_url:
+          maxLength: 128
+          type: string
+        ical_url:
+          maxLength: 128
+          type: string
+      example:
+        rss_url: rss_url
+        id: 0
+        ical_url: ical_url
+        username: username
+    Error:
+      required:
+      - code
+      - message
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    inline_response_200:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MywibmFtZSI6ImFkbWluIiwiY3JlYXRlZF9hdCI6IjIwMjAtMTEtMzAgMjA6MjA6MjcuNjgwMzc4In0.SFahA-KiN0pU1K7U_LJb1DR4wDeRZnqN60fxNrWchQ4
+      example:
+        token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MywibmFtZSI6ImFkbWluIiwiY3JlYXRlZF9hdCI6IjIwMjAtMTEtMzAgMjA6MjA6MjcuNjgwMzc4In0.SFahA-KiN0pU1K7U_LJb1DR4wDeRZnqN60fxNrWchQ4
+    inline_response_200_1:
+      required:
+      - code
+      - message
+      type: object
+      properties:
+        code:
+          maximum: 200
+          minimum: 200
+          type: integer
+          format: int32
+        message:
+          type: string
+      example:
+        code: 200
+        message: message
+  responses:
+    Error:
+      description: 一般的なエラー
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            "400":
+              $ref: '#/components/examples/400'
+            "401":
+              $ref: '#/components/examples/401'
+            "403":
+              $ref: '#/components/examples/403'
+            "404":
+              $ref: '#/components/examples/404'
+            "500":
+              $ref: '#/components/examples/500'
+    Success:
+      description: 成功した場合
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/inline_response_200_1'
+          example:
+            code: 200
+            message: OK
+  examples:
+    "400":
+      summary: Bad Request
+      value:
+        code: 400
+        message: Bad Request
+    "401":
+      summary: Unauthorized
+      value:
+        code: 401
+        message: Unauthorized
+    "403":
+      summary: Forbidden
+      value:
+        code: 403
+        message: Forbidden
+    "404":
+      summary: Not Found
+      value:
+        code: 404
+        message: Not Found
+    "500":
+      summary: Internal Server Error
+      value:
+        code: 500
+        message: Internal Server Error
+  securitySchemes:
+    Bearer:
+      type: http
+      description: Credentials or access token for API
+      scheme: bearer
